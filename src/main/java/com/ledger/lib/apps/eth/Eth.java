@@ -58,16 +58,20 @@ public class Eth extends LedgerApplication {
     return SerializeHelper.readWalletAddress(response.getResponse());
   }  
 
-  private ECDSADeviceSignature signMessageOrTransaction(int ins, String bip32Path, byte[] rawTransaction) throws LedgerException {
+  private ECDSADeviceSignature signMessageOrTransaction(int ins, String bip32Path, byte[] rawTransaction, boolean signMsg) throws LedgerException {
     byte[] convertedPath = BIP32Helper.splitPath(bip32Path);
     int offset = 0;
+    int extra = (signMsg ? 4 : 0);
     ApduExchange.ApduResponse response = null;
     while (offset != rawTransaction.length) {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
-      int maxBlockSize = (offset == 0 ? MAX_BLOCK_SIZE - convertedPath.length : MAX_BLOCK_SIZE);
+      int maxBlockSize = (offset == 0 ? MAX_BLOCK_SIZE - convertedPath.length - extra : MAX_BLOCK_SIZE);
       int blockSize = (offset + maxBlockSize > rawTransaction.length ? rawTransaction.length - offset : maxBlockSize);
       if (offset == 0) {
         out.write(convertedPath, 0, convertedPath.length);
+        if (signMsg) {
+          SerializeHelper.writeUint32BE(out, rawTransaction.length);
+        }
       }
       out.write(Arrays.copyOfRange(rawTransaction, offset, offset + blockSize), 0, blockSize);
       response = ApduExchange.exchangeApdu(device, ETH_CLA, 
@@ -92,7 +96,7 @@ public class Eth extends LedgerApplication {
    * @return ECDSA signature of the transaction
    */
   public ECDSADeviceSignature signTransaction(String bip32Path, byte[] rawTransaction) throws LedgerException {
-    return signMessageOrTransaction(INS_SIGN_TRANSACTION, bip32Path, rawTransaction);
+    return signMessageOrTransaction(INS_SIGN_TRANSACTION, bip32Path, rawTransaction, false);
   }
 
   /**
@@ -130,7 +134,7 @@ public class Eth extends LedgerApplication {
    * @return ECDSA signature of the message
    */
   public ECDSADeviceSignature signPersonalMessage(String bip32Path, byte[] message) throws LedgerException {
-    return signMessageOrTransaction(INS_SIGN_PERSONAL_MESSAGE, bip32Path, message);
+    return signMessageOrTransaction(INS_SIGN_PERSONAL_MESSAGE, bip32Path, message, true);
   }
 
 }
