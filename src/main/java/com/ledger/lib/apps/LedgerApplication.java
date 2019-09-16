@@ -1,6 +1,7 @@
 package com.ledger.lib.apps;
 
 import com.ledger.lib.LedgerException;
+import com.ledger.lib.WrongApplicationException;
 import com.ledger.lib.transport.LedgerDevice;
 import com.ledger.lib.utils.ApduExchange;
 import com.ledger.lib.utils.SW;
@@ -58,6 +59,7 @@ public class LedgerApplication {
 
   private static final int CLA_COMMON_SDK = 0xB0;
   private static final int INS_GET_APP_NAME_AND_VERSION = 0x01;
+  private static final int INS_GET_WALLET_ID = 0x04;
   private static final int INS_EXIT = 0xA7;
 
   protected LedgerDevice device;
@@ -79,6 +81,20 @@ public class LedgerApplication {
     response.checkSW();
     return new ApplicationDetails(response.getResponse());
   }  
+
+  /**
+   * Return the wallet ID, unique for a given current seed
+   * @return wallet ID
+   */
+  public byte[] getWalletID() throws LedgerException {
+    ApduExchange.ApduResponse response = ApduExchange.exchangeApdu(device, CLA_COMMON_SDK, INS_GET_WALLET_ID, 0, 0);    
+    if (response.getSW() == SW.SW_OK) {
+      return response.getResponse();
+    }
+    else {
+      throw new WrongApplicationException();
+    }
+  }
 
   /**
    * Exit the currently running application, going back to the dashboard without user confirmation

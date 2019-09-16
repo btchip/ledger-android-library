@@ -5,6 +5,8 @@ import java.util.Arrays;
 
 import com.ledger.lib.transport.LedgerDevice;
 import com.ledger.lib.LedgerException;
+import com.ledger.lib.SWException;
+import com.ledger.lib.WrongApplicationException;
 
 /**
  * Utility class to exchange APDUs
@@ -40,7 +42,13 @@ public class ApduExchange {
 		*/
 		public void checkSW() throws LedgerException {
 			if (sw != SW.SW_OK) {
-				throw new LedgerException(LedgerException.ExceptionReason.APPLICATION_ERROR, "Invalid status " + Integer.toHexString(sw));		
+				switch(sw) {
+					case SW.SW_CLA_NOT_SUPPORTED:
+					case SW.SW_INS_NOT_SUPPORTED:
+					case SW.SW_INCORRECT_P1_P2:
+						throw new WrongApplicationException();
+				}
+				throw new SWException(sw);
 			}
 		}
 
@@ -54,7 +62,7 @@ public class ApduExchange {
 					return;
 				}
 			}
-			throw new LedgerException(LedgerException.ExceptionReason.APPLICATION_ERROR, "Invalid status " + Integer.toHexString(sw));
+			throw new SWException(sw);
 		}
 	}
 
