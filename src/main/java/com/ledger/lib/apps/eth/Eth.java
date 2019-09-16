@@ -18,9 +18,54 @@ import com.ledger.lib.apps.common.ECDSADeviceSignature;
  */
 public class Eth extends LedgerApplication {
 
+  /**
+   * \brief Details about the ETH application
+   */
+  public class EthConfiguration {
+
+    /** Set if arbitrary contract data signing is allowed by the user */
+    public static final int FLAG_DATA_ALLOWED = 0x01;
+    /** Set if ERC 20 token information has to be provided by the caller */
+    public static final int FLAG_EXTERNAL_TOKEN_NEEDED = 0x02;
+    
+    private int flags;
+
+    EthConfiguration(byte[] response) {
+      int offset = 0;      
+      flags = (response[offset++] & 0xff);
+    }
+
+    /** Return the application flags */
+    public int getFlags() {
+      return flags;
+    }
+
+    /** Convert the flags to a string */
+    public String flagsToString() {
+      String result = "";
+      if ((flags & FLAG_DATA_ALLOWED) != 0) {
+        result += "Data signing allowed,";
+      }
+      if ((flags & FLAG_EXTERNAL_TOKEN_NEEDED) != 0) {
+        result += "External ERC 20 information required,";
+      }
+      if (result.length() == 0) {
+        return result;
+      }
+      else {
+        return result.substring(0, result.length() - 1);
+      }
+    }
+
+    public String toString() {
+      return flagsToString();
+    }
+  }
+
   private static final int ETH_CLA = 0xE0;
   private static final int INS_GET_PUBLIC_ADDRESS = 0x02;
   private static final int INS_SIGN_TRANSACTION = 0x04;
+  private static final int INS_GET_APPLICATION_CONFIGURATION = 0x06;
   private static final int INS_SIGN_PERSONAL_MESSAGE = 0x08;
   private static final int INS_PROVIDE_ERC20_TOKEN_INFORMATION = 0x0A;
 
@@ -136,5 +181,16 @@ public class Eth extends LedgerApplication {
   public ECDSADeviceSignature signPersonalMessage(String bip32Path, byte[] message) throws LedgerException {
     return signMessageOrTransaction(INS_SIGN_PERSONAL_MESSAGE, bip32Path, message, true);
   }
+
+  /** 
+   * Return the application configuration
+   * @return application configuration
+   */
+  public EthConfiguration getConfiguration() throws LedgerException {
+    ApduExchange.ApduResponse response = ApduExchange.exchangeApdu(device, ETH_CLA, INS_GET_APPLICATION_CONFIGURATION, 0, 0);
+    response.checkSW();
+    return new EthConfiguration(response.getResponse());
+  }  
+
 
 }
