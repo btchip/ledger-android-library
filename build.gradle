@@ -6,6 +6,8 @@ buildscript {
 
   dependencies {
     classpath 'com.android.tools.build:gradle:3.3.2'
+    classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
+    classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
   }
 }
 
@@ -17,6 +19,8 @@ allprojects {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
 
 android {
   compileSdkVersion 28
@@ -35,10 +39,35 @@ android {
   }
 }
 
-task javadoc(type: Javadoc) {
+tasks.withType(Javadoc).all {
     failOnError false
     source = android.sourceSets.main.java.sourceFiles
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     classpath += configurations.compile
 }
+
+ext {
+    bintrayRepo = 'ledger-android'
+    bintrayName = 'ledger-android-library'
+
+    publishedGroupId = 'com.ledger.lib'
+    libraryName = 'LedgerCommunication'
+    artifact = 'ledger-android-library'
+
+    libraryDescription = 'Android communication API with Ledger devices (USB/BLE)'
+
+    siteUrl = 'https://github.com/btchip/ledger-android-library'
+    gitUrl = 'https://github.com/btchip/ledger-android-library.git'
+
+    libraryVersion = '1.0.0'
+
+    developerId = 'btchip'
+    developerName = 'Nicolas Bacca'
+    developerEmail = 'nicolas.bacca+bintray@gmail.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
+apply from: 'https://gist.githubusercontent.com/btchip/71313d1258cf71a2d2cd72e3b82bacf7/raw/bc14bfb0fc886f1eb8d9b9c8468b93dcdf278284/publishToJcenter.txt'
 
