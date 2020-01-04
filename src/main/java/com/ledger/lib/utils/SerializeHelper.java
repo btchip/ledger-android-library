@@ -24,6 +24,16 @@ public class SerializeHelper {
 	}
 
 	/**
+	 * Write a big endian encoded uint16 value into a buffer
+	 * @param buffer buffer to write to
+	 * @param value value to write
+	 */
+	public static void writeUint16BE(ByteArrayOutputStream buffer, long value) {
+		buffer.write((byte)((value >> 8) & 0xff));
+		buffer.write((byte)(value & 0xff));		
+	}
+
+	/**
 	 * Read a big endian encoded uint32 value from a buffer
 	 * @param buffer buffer to read from
 	 * @param offset offset to read from in the bufffer
@@ -31,6 +41,16 @@ public class SerializeHelper {
 	 */
 	public static long readUint32BE(byte[] buffer, int offset) {
 		return ((buffer[offset] & 0xff) << 24) | ((buffer[offset + 1] & 0xff) << 16) | ((buffer[offset + 2] & 0xff) << 8) | (buffer[offset + 3] & 0xff);
+	}
+
+	/**
+	 * Read a little endian encoded uint32 value from a buffer
+	 * @param buffer buffer to read from
+	 * @param offset offset to read from in the bufffer
+	 * @return uint32 value
+	 */
+	public static long readUint32LE(byte[] buffer, int offset) {
+		return ((buffer[offset + 3] & 0xff) << 24) | ((buffer[offset + 2] & 0xff) << 16) | ((buffer[offset + 1] & 0xff) << 8) | (buffer[offset] & 0xff);
 	}
 
 	/**

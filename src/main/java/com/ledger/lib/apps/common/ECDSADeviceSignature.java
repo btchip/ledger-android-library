@@ -1,5 +1,6 @@
 package com.ledger.lib.apps.common;
 
+import java.util.Arrays;
 import java.io.ByteArrayOutputStream;
 
 import com.ledger.lib.utils.Dump;
@@ -17,6 +18,20 @@ import com.ledger.lib.utils.Dump;
       this.v = v;
       this.r = r;
       this.s = s;
+    }
+
+    public ECDSADeviceSignature(int v, byte[] derSignature) {
+      this.v = v;
+      int offset = 4;
+      this.r = Arrays.copyOfRange(derSignature, offset, offset + derSignature[offset - 1]);
+      if (this.r[0] == 0) {
+        this.r = Arrays.copyOfRange(this.r, 1, this.r.length);
+      }
+      offset += derSignature[offset - 1] + 2;
+      this.s = Arrays.copyOfRange(derSignature, offset, offset + derSignature[offset - 1]);
+      if (this.s[0] == 0) {
+        this.s = Arrays.copyOfRange(this.s, 1, this.s.length);
+      }
     }
 
     /** Get the recovery information (v) of the signature */
