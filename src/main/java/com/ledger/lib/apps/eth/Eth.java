@@ -11,7 +11,6 @@ import com.ledger.lib.apps.common.ECDSADeviceSignature;
 import com.ledger.lib.utils.BIP32Helper;
 import com.ledger.lib.utils.ApduExchange;
 import com.ledger.lib.utils.SerializeHelper;
-import com.ledger.lib.apps.common.ECDSADeviceSignature;
 
 /**
  * \brief Communication with the device ETH application, and all forks based on the ETH application
