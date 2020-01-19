@@ -1,5 +1,7 @@
 package com.ledger.lib.apps;
 
+import java.util.Arrays;
+
 import com.ledger.lib.LedgerException;
 import com.ledger.lib.WrongApplicationException;
 import com.ledger.lib.transport.LedgerDevice;
@@ -60,7 +62,10 @@ public class LedgerApplication {
   private static final int CLA_COMMON_SDK = 0xB0;
   private static final int INS_GET_APP_NAME_AND_VERSION = 0x01;
   private static final int INS_GET_WALLET_ID = 0x04;
+  private static final int INS_GET_WALLET_ID_NATIVE = 0x02;
   private static final int INS_EXIT = 0xA7;
+
+  private static final int NATIVE_WALLET_ID_FORMAT = 1;
 
   protected LedgerDevice device;
 
@@ -87,9 +92,19 @@ public class LedgerApplication {
    * @return wallet ID
    */
   public byte[] getWalletID() throws LedgerException {
-    ApduExchange.ApduResponse response = ApduExchange.exchangeApdu(device, CLA_COMMON_SDK, INS_GET_WALLET_ID, 0, 0);    
+    ApduExchange.ApduResponse response = ApduExchange.exchangeApdu(device, CLA_COMMON_SDK, INS_GET_WALLET_ID_NATIVE, 0, 0);    
     if (response.getSW() == SW.SW_OK) {
-      return response.getResponse();
+      byte[] responseData = response.getResponse();
+      if (responseData[0] != NATIVE_WALLET_ID_FORMAT) {
+        throw new LedgerException(LedgerException.ExceptionReason.INTERNAL_ERROR, "Unsupported Wallet ID format");
+      }
+      int idLength = (int)(responseData[1] & 0xff);
+      return Arrays.copyOfRange(responseData, 2, idLength + 2);
+    }    
+    response = ApduExchange.exchangeApdu(device, CLA_COMMON_SDK, INS_GET_WALLET_ID, 0, 0);    
+    if (response.getSW() == SW.SW_OK) {
+      byte[] responseData = response.getResponse();
+      return Arrays.copyOfRange(responseData, 0, responseData.length - 2);
     }
     else {
       throw new WrongApplicationException();
