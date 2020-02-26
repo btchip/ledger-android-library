@@ -1,4 +1,6 @@
 <resources>
 	<public name="erc20" type="raw"/>
+	<public name="trc10" type="raw"/>
+	<public name="tronexchanges" type="raw"/>
 </resources>
 
