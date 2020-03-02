@@ -211,6 +211,39 @@ public class Trx extends LedgerApplication {
   }
 
   /**
+   * Sign a message according to the eth_sign web3 RPC call
+   * @param bip32Path BIP 32 path to derive
+   * @param message message to sign
+   * @return ECDSA signature of the message
+   */
+  public ECDSADeviceSignature signPersonalMessage(String bip32Path, byte[] message) throws LedgerException {
+    byte[] convertedPath = BIP32Helper.splitPath(bip32Path);
+    int offset = 0;
+    ApduExchange.ApduResponse response = null;
+    while (offset != message.length) {
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      int maxBlockSize = (offset == 0 ? MAX_BLOCK_SIZE - convertedPath.length - 4 : MAX_BLOCK_SIZE);
+      int blockSize = (offset + maxBlockSize > message.length ? message.length - offset : maxBlockSize);
+      if (offset == 0) {
+        out.write(convertedPath, 0, convertedPath.length);
+        SerializeHelper.writeUint32BE(out, message.length);
+      }
+      out.write(Arrays.copyOfRange(message, offset, offset + blockSize), 0, blockSize);
+      response = ApduExchange.exchangeApdu(device, TRX_CLA,
+        INS_SIGN_PERSONAL_MESSAGE, 
+        (offset == 0 ? P1_FIRST_BLOCK : P1_NEXT_BLOCK),
+        0,
+        out.toByteArray());
+      response.checkSW();
+      offset += blockSize;
+    }
+    byte[] responseData = response.getResponse();
+    return new ECDSADeviceSignature((responseData[64] & 0xff), 
+      Arrays.copyOfRange(responseData, 0, 0 + 32),
+      Arrays.copyOfRange(responseData, 0 + 32, 0 + 32 + 32));    
+  }
+
+  /**
    * Retrieve the TRC 10 token information for a specific ID
    * @param id ID of the TRC10
    * @return token information to be used in signInfoTransaction or null if not available 
