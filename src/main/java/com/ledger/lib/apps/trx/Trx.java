@@ -9,6 +9,7 @@ import com.ledger.lib.transport.LedgerDevice;
 import com.ledger.lib.apps.LedgerApplication;
 import com.ledger.lib.apps.common.WalletAddress;
 import com.ledger.lib.apps.common.ECDSADeviceSignature;
+import com.ledger.lib.utils.SW;
 import com.ledger.lib.utils.BIP32Helper;
 import com.ledger.lib.utils.ApduExchange;
 import com.ledger.lib.utils.SerializeHelper;
@@ -183,6 +184,10 @@ public class Trx extends LedgerApplication {
         p1,
         0,
         out.toByteArray());
+      if (response.getSW() == SW.SW_INCORRECT_P1_P2) {
+        // Most legitimate reason to receive this here
+        throw new CustomContractNotEnabledException();
+      }
       response.checkSW();
       offset += blockSize;
     }
