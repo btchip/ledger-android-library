@@ -267,7 +267,7 @@ public class Btc extends LedgerApplication {
       txHash = getTXHash(transaction);  
     }    
     SerializeHelper.writeBuffer(data, txHash);
-    SerializeHelper.writeUint32BE(data, index);
+    SerializeHelper.writeUint32LE(data, index);
     data.write(transaction.getOutputs().get((int)index).getAmount(), 0, 8);
     return new TXInput(InputType.INPUT_WITNESS, data.toByteArray());
   }
