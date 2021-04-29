@@ -59,7 +59,7 @@ ext {
     siteUrl = 'https://github.com/btchip/ledger-android-library'
     gitUrl = 'https://github.com/btchip/ledger-android-library.git'
 
-    libraryVersion = '1.2.2'
+    libraryVersion = '1.2.3'
 
     developerId = 'btchip'
     developerName = 'Nicolas Bacca'
