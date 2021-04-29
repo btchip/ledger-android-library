@@ -426,7 +426,9 @@ public class Btc extends LedgerApplication {
     out.write(SIGHASH_ALL);
     response = ApduExchange.exchangeApdu(device, BTC_CLA, INS_HASH_SIGN, 0, 0, out.toByteArray());
     response.checkSW();
-    return Arrays.copyOfRange(response.getResponse(), 0, response.getResponse().length - 2);
+    byte[] signature = Arrays.copyOfRange(response.getResponse(), 0, response.getResponse().length - 2);
+    signature[0] &= 0xF0;
+    return signature;
   }
 
 
@@ -528,6 +530,7 @@ public class Btc extends LedgerApplication {
     for (BtcTransaction.BtcInput input : unsignedTransaction.getInputs()) {
       BtcTransaction previousTx = txs.get(Dump.dump(input.getPrevHash()));
       TXInput trustedInput;
+      /*
       // If all tx inputs aren't using Segwit, collect all Trusted Inputs from the device
       if (legacyInputFound) {        
         trustedInput = getTrustedInput(previousTx, input.getPrevIndex());
@@ -535,6 +538,8 @@ public class Btc extends LedgerApplication {
       else {
         trustedInput = getTrustedInputBIP143(previousTx, input.getPrevIndex());
       }
+      */
+      trustedInput = getTrustedInput(previousTx, input.getPrevIndex());
       txInputs[index] = trustedInput;
       index++;
     }
@@ -558,11 +563,13 @@ public class Btc extends LedgerApplication {
     }
     // Handle Segwit signing
     if (segwitInputFound) {      
+      /*
       if (legacyInputFound) {
         for (int i=0; i<txInputs.length; i++) {
           txInputs[i] = getTrustedInputBIP143(txInputs[i]);
         }
       }
+      */
       TXInput[] txInput = new TXInput[1];
       startUntrustedTransaction(unsignedTransaction, newTx, legacyInputFound, 0, txInputs, NULL_SCRIPT);
       newTx = false;
