@@ -347,12 +347,13 @@ public class Btc extends LedgerApplication {
     return getRedeemScript(input, addressFormat, null, publicKey);
   }
 
-  private void startUntrustedTransaction(BtcTransaction transaction, boolean newTransaction, boolean continueSegwit, long inputIndex, TXInput usedInputList[], byte[] redeemScript) throws LedgerException {
+  private void startUntrustedTransaction(BtcTransaction transaction, boolean newTransaction, boolean segwit, boolean continueSegwit, long inputIndex, TXInput usedInputList[], byte[] redeemScript) throws LedgerException {
     ApduExchange.ApduResponse response;
     // Check inputs consistency
     if (usedInputList.length != transaction.getInputs().size()) {
       throw new LedgerException(LedgerException.ExceptionReason.INVALID_PARAMETER, "Invalid number of inputs passed");
     }
+    /*
     boolean segwit = false;
     for (TXInput currentInput : usedInputList) {
       if (currentInput.getInputType() == InputType.INPUT_WITNESS) {
@@ -360,6 +361,7 @@ public class Btc extends LedgerApplication {
         break;
       }
     }
+    */
     ByteArrayOutputStream data = new ByteArrayOutputStream();
     SerializeHelper.writeBuffer(data, transaction.getVersion());
     VarintUtils.write(data, transaction.getInputs().size());
@@ -549,7 +551,7 @@ public class Btc extends LedgerApplication {
       for (BtcTransaction.BtcInput input : unsignedTransaction.getInputs()) {
         if (outputType.get(index).equals(AddressFormat.LEGACY)) {
           byte[] redeemScript = getRedeemScript(input, txs.get(Dump.dump(input.getPrevHash())));
-          startUntrustedTransaction(unsignedTransaction, newTx, false, index, txInputs, redeemScript);
+          startUntrustedTransaction(unsignedTransaction, newTx, false, false, index, txInputs, redeemScript);
           newTx = false;
           if (!changeProvided && (changePath != null) && (changePath.length() != 0)) {
             provideOutputFullChangePath(changePath);
@@ -571,7 +573,7 @@ public class Btc extends LedgerApplication {
       }
       */
       TXInput[] txInput = new TXInput[1];
-      startUntrustedTransaction(unsignedTransaction, newTx, legacyInputFound, 0, txInputs, NULL_SCRIPT);
+      startUntrustedTransaction(unsignedTransaction, newTx, true, legacyInputFound, 0, txInputs, NULL_SCRIPT);
       newTx = false;
       if (!changeProvided && (changePath != null) && (changePath.length() != 0)) {
         provideOutputFullChangePath(changePath);
@@ -587,7 +589,7 @@ public class Btc extends LedgerApplication {
           tx.setLockTime(unsignedTransaction.getLockTime());
           txInput[0] = txInputs[index];
           byte[] redeemScript = getRedeemScript(input, outputType.get(index), publicKeys.get(associatedKeysets.get(index)));
-          startUntrustedTransaction(tx, false, false, 0, txInput, redeemScript);
+          startUntrustedTransaction(tx, false, true, false, 0, txInput, redeemScript);
           signatures[index] = signTransaction(unsignedTransaction, associatedKeysets.get(index)); 
         }
         index++;
